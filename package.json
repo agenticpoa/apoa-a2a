@@ -1,6 +1,6 @@
 {
   "name": "@apoa/a2a",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "APOA authorization for A2A agent-to-agent communication — scoped delegation tokens, capability attenuation, audit trails",
   "type": "module",
   "main": "dist/index.js",

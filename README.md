@@ -1,4 +1,4 @@
-[![APOA on A2A](https://github.com/agenticpoa/apoa-a2a/blob/main/assets/banner.png?raw=true)](https://github.com/agenticpoa/apoa)
+[![APOA on A2A](assets/banner.png)](https://github.com/agenticpoa/apoa)
 
 # @apoa/a2a
 
