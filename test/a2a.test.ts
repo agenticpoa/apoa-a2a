@@ -19,6 +19,7 @@ async function createToken(
     services?: Array<{ service: string; scopes: string[]; constraints?: Record<string, unknown> }>;
     rules?: Array<{ id: string; enforcement: string; description: string }>;
     exp?: number;
+    parentToken?: string;
   },
 ) {
   const now = Math.floor(Date.now() / 1000);
@@ -36,6 +37,7 @@ async function createToken(
         { service: 'hotels', scopes: ['search', 'reserve'] },
       ],
       rules: overrides?.rules,
+      parentToken: overrides?.parentToken,
     },
   };
 
@@ -300,6 +302,39 @@ describe('A2A Guard', () => {
     const r2 = await guard.authorize(message, 'book-flight');
     expect(r2.authorized).toBe(false);
     expect(r2.reason).toContain('revoked');
+  });
+
+  it('checks revocation for canonical parentToken ancestors', async () => {
+    const revokedTokens = new Map<string, { tokenId: string; revokedAt: Date; revokedBy: string }>();
+    const guard = createA2AGuard({
+      key: publicKey,
+      mappings: { 'book-flight': 'flights:book' },
+      revocationStore: {
+        async check(tokenId) { return revokedTokens.get(tokenId) ?? null; },
+        async checkAny(tokenIds) {
+          for (const id of tokenIds) {
+            const r = revokedTokens.get(id);
+            if (r) return r;
+          }
+          return null;
+        },
+      },
+    });
+
+    const token = await createToken(privateKey, { parentToken: 'canonical-parent-tok' });
+    revokedTokens.set('canonical-parent-tok', {
+      tokenId: 'canonical-parent-tok',
+      revokedAt: new Date(),
+      revokedBy: 'admin',
+    });
+
+    const message: { metadata?: Record<string, unknown> } = {};
+    attachToken(message, token);
+
+    const result = await guard.authorize(message, 'book-flight');
+    expect(result.authorized).toBe(false);
+    expect(result.reason).toContain('revoked');
+    expect(result.reason).toContain('ancestor');
   });
 
   it('logs audit entries', async () => {
