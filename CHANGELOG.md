@@ -10,6 +10,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## 0.1.6 — 2026-05-16
+
+### Fixed
+
+- Include canonical `definition.parentToken` ancestors in revocation checks, in addition to transport `delegationChain` metadata. This ensures a revoked parent token denies delegated A2A child messages even when the chain is represented using the core SDK's canonical `parentToken` field.
+
+### Added
+
+- Regression coverage for canonical parent-token cascade revocation.
+
+---
+
 ## 0.1.5 — 2026-05-10
 
 ### Changed
