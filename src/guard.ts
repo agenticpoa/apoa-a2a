@@ -6,6 +6,7 @@
  */
 
 import {
+  getDelegationAncestorIds,
   matchScope,
   type APOAToken,
   type AuthorizationResult,
@@ -267,33 +268,4 @@ export function createA2AGuard(options: A2AGuardOptions) {
   }
 
   return { authorize, resolveSkillMapping };
-}
-
-function getDelegationAncestorIds(input: {
-  definition?: { parentToken?: unknown; delegationChain?: unknown };
-}): string[] {
-  const ids: string[] = [];
-  const seen = new Set<string>();
-
-  const push = (value: unknown): void => {
-    if (typeof value !== 'string' || value.length === 0 || seen.has(value)) return;
-    seen.add(value);
-    ids.push(value);
-  };
-
-  const definition = input.definition;
-  push(definition?.parentToken);
-
-  const chain = definition?.delegationChain;
-  if (Array.isArray(chain)) {
-    for (const link of chain) {
-      if (typeof link === 'string') {
-        push(link);
-      } else if (link && typeof link === 'object') {
-        push((link as { parentTokenId?: unknown }).parentTokenId);
-      }
-    }
-  }
-
-  return ids;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@apoa/a2a",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "APOA authorization for A2A agent-to-agent communication \u2014 scoped delegation tokens, capability attenuation, audit trails",
   "type": "module",
   "main": "dist/index.js",
@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/agenticpoa/apoa-a2a#readme",
   "dependencies": {
-    "@apoa/core": "^0.2.0",
+    "@apoa/core": "^0.2.1",
     "jose": "^6.0.0"
   },
   "devDependencies": {
