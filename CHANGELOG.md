@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- Bump `@apoa/core` dependency range to `^0.2.3` so A2A examples can use the published `APOA` facade.
+
 ---
 
 ## 0.1.7 — 2026-05-16

@@ -18,6 +18,18 @@ npm install @apoa/a2a
 
 ```typescript
 import { attachToken, apoaHeaders } from '@apoa/a2a';
+import { APOA, generateKeyPair } from '@apoa/core';
+
+const keys = await generateKeyPair();
+const apoa = new APOA({ privateKey: keys.privateKey });
+
+const token = await apoa.tokens.createGrant({
+  principal: 'did:apoa:jane',
+  agent: 'did:apoa:travel-planner',
+  service: 'flights',
+  scopes: ['book', 'search'],
+  expiresIn: '24h',
+});
 
 const message = {
   messageId: 'msg-001',
@@ -26,7 +38,7 @@ const message = {
 };
 
 // Attach token to message metadata (keyed by APOA extension URI)
-attachToken(message, apoaToken.raw);
+attachToken(message, token.raw);
 
 // Send with APOA extension header
 await fetch('https://agent.example.com/message:send', {

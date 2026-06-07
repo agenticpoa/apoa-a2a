@@ -6,6 +6,7 @@
  */
 
 import * as jose from 'jose';
+import { APOA, generateKeyPair } from '@apoa/core';
 import {
   apoaExtension,
   apoaSkillRequirement,
@@ -22,7 +23,7 @@ async function main() {
   console.log('SETUP');
   console.log('='.repeat(60));
 
-  const janeKeys = await jose.generateKeyPair('EdDSA', { extractable: true });
+  const janeKeys = await generateKeyPair();
   console.log('Generated Ed25519 key pair for Jane\n');
 
   // --- Step 1: Jane creates an APOA token ---
@@ -30,36 +31,26 @@ async function main() {
   console.log('STEP 1: Jane Creates Authorization Token');
   console.log('='.repeat(60));
 
-  const now = Math.floor(Date.now() / 1000);
-  const tokenPayload = {
-    jti: `jane-token-${crypto.randomUUID().slice(0, 8)}`,
-    iss: 'did:apoa:jane',
-    sub: 'did:apoa:travel-planner',
-    iat: now,
-    exp: now + 86400, // 24 hours
-    definition: {
-      principal: { id: 'did:apoa:jane', name: 'Jane Doe' },
-      agent: { id: 'did:apoa:travel-planner', name: 'Travel Planner' },
-      agentProvider: { name: 'TravelBot Inc.' },
-      services: [
-        { service: 'flights', scopes: ['search', 'book', 'cancel'], constraints: { firstClass: false } },
-        { service: 'hotels', scopes: ['search', 'reserve'] },
-      ],
-      rules: [
-        { id: 'no-firstClass', enforcement: 'hard', description: 'No first class bookings' },
-        { id: 'budget-alert', enforcement: 'soft', description: 'Alert if total exceeds $1000' },
-      ],
-      expires: new Date((now + 86400) * 1000).toISOString(),
-      delegatable: true,
-      maxDelegationDepth: 3,
-    },
-  };
+  const apoa = new APOA({ privateKey: janeKeys.privateKey });
+  const janeGrant = await apoa.tokens.createGrant({
+    principal: { id: 'did:apoa:jane', name: 'Jane Doe' },
+    agent: { id: 'did:apoa:travel-planner', name: 'Travel Planner' },
+    agentProvider: { name: 'TravelBot Inc.' },
+    services: [
+      { service: 'flights', scopes: ['search', 'book', 'cancel'], constraints: { firstClass: false } },
+      { service: 'hotels', scopes: ['search', 'reserve'] },
+    ],
+    rules: [
+      { id: 'no-firstClass', enforcement: 'hard', description: 'No first class bookings' },
+      { id: 'budget-alert', enforcement: 'soft', description: 'Alert if total exceeds $1000' },
+    ],
+    expiresIn: '24h',
+    delegatable: true,
+    maxDelegationDepth: 3,
+  });
+  const janeToken = janeGrant.raw;
 
-  const janeToken = await new jose.CompactSign(
-    new TextEncoder().encode(JSON.stringify(tokenPayload)),
-  ).setProtectedHeader({ alg: 'EdDSA' }).sign(janeKeys.privateKey);
-
-  console.log(`Token ID:    ${tokenPayload.jti}`);
+  console.log(`Token ID:    ${janeGrant.jti}`);
   console.log(`Principal:   Jane Doe`);
   console.log(`Agent:       Travel Planner`);
   console.log(`Services:    flights (search, book, cancel), hotels (search, reserve)`);
@@ -204,8 +195,8 @@ async function main() {
   const preRevoke = await guard.authorize(message, 'book-flight');
   console.log(`  Before revoke: book-flight = ${preRevoke.authorized ? 'ALLOWED' : 'DENIED'}`);
 
-  revokedTokens.set(tokenPayload.jti, {
-    tokenId: tokenPayload.jti,
+  revokedTokens.set(janeGrant.jti, {
+    tokenId: janeGrant.jti,
     revokedAt: new Date(),
     revokedBy: 'did:apoa:jane',
   });
